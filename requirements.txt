@@ -1,0 +1,6 @@
+# pocketsphinx
+SpeechRecognition
+pyaudio
+psutil
+pyttsx3
+
