@@ -8,7 +8,9 @@ import locale
 import requests
 import openai
 import json
+from dotenv import load_dotenv
 
+load_dotenv()
 
 # Configuración de las librerías
 engine = pyttsx3.init()
@@ -24,7 +26,7 @@ asistente_activado = False
 locale.setlocale(locale.LC_ALL, 'es_ES')
 
 # key openIA
-openai.api_key = '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'
+openai.api_key = os.getenv('OPENIA')
 
 # Función para hablar
 def speak(text):
@@ -253,7 +255,7 @@ def search_google():
     webbrowser.open("https://www.google.com/search?q=" + query)
 
 #buscar el clima
-api_clima = '0742652bbd26704d89c7dde84fd1417f'
+api_clima = os.getenv('OPEN_WEATHER_MAP')
 
 def pronostico():
 
@@ -268,9 +270,9 @@ def pronostico():
 
         data = response.json()
 
-        temperature = "Temperatura en Medellín:", data["main"]["temp"], "grados Celsius"
-        humedad = "Humedad en Medellín:", data["main"]["humidity"], "%"
-        description = "Descripción del clima en Medellín:", data["weather"][0]["description"]
+        temperature = "Temperatura" + ciudad, data["main"]["temp"], "grados Celsius"
+        humedad = "Humedad en" + ciudad, data["main"]["humidity"], "%"
+        description = "Descripción del clima en " + ciudad, data["weather"][0]["description"]
 
         speak(temperature)
         print(temperature)
