@@ -1,2 +1,4 @@
-D:\estudio\asistente-con-python\env\Lib
-D:\estudio\asistente-con-python\.env
+/env/Lib
+
+# misc
+.env
