@@ -3,6 +3,7 @@ C:\Users\USER\AppData\Local\Programs\Python\Python311
 C:\Users\USER\AppData\Local\Programs\Python\Python311\Scripts
 
 asegurarse de tener instalado Virtualenv
+pip install virtualenv
 
 despues de tener python
 source env/Scripts/activate # debe aparecerte en la consola entre parentesis env
@@ -12,3 +13,6 @@ pip install -r requirements.txt
 
 correr el programa
 python asistente-three.py
+
+parar el entorno
+deactivate
