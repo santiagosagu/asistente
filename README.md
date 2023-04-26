@@ -5,8 +5,12 @@ C:\Users\USER\AppData\Local\Programs\Python\Python311\Scripts
 asegurarse de tener instalado Virtualenv
 pip install virtualenv
 
+virtualenv env
+
 despues de tener python
-source env/Scripts/activate # debe aparecerte en la consola entre parentesis env
+source env/Scripts/activate # debe aparecerte en la consola entre parentesis env windows
+source myproject/bin/activate # linux
+
 
 instalar un lector de variables de entorno
 pip install python-dotenv
