@@ -21,6 +21,7 @@ r.dynamic_energy_threshold = True  # Habilitar ajuste dinámico del umbral de en
 
 # Variable para detectar la palabra clave "asís"
 asistente_activado = False
+microphone_always_on = False
 
 # Configurar idioma español
 locale.setlocale(locale.LC_ALL, 'es_ES')
@@ -35,13 +36,20 @@ def speak(text):
 
 # Función para reconocer el comando de voz
 def recognize_speech():
+
+    global microphone_always_on  # Definir la variable como global
+
     with sr.Microphone() as source:
         if asistente_activado:
             print("Esperando...")
 
+            audio = r.listen(source)
+
         else: 
             print("Llamame Asís y podre ayudarte... ")
-        audio = r.listen(source)
+  
+            audio = r.listen(source, phrase_time_limit=1.7) # Grabar hasta 2 segundos como máximo
+
 
         try:
             speech_text = r.recognize_google(audio, language="es-ES")
@@ -105,10 +113,12 @@ def open_website(website_name):
         webbrowser.open("https://www.google.com")
 
     elif "en prime" in website_name:
+        speak("Realizando búsqueda")
         webbrowser.open("https://www.primevideo.com/search/ref=atv_nb_sug?ie=UTF8&phrase=" + website_name.replace("buscar en prime ", ""))
 
     elif "en youtube" in website_name:
         # webbrowser.open("https://www.youtube.com")
+        speak("Realizando búsqueda")
         webbrowser.open("https://www.youtube.com/results?search_query=" + website_name.replace("buscar en youtube ", ""))
 
     elif "youtube" in website_name:
