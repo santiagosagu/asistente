@@ -1,13 +1,13 @@
 import speech_recognition as sr
 import pyttsx3
-import subprocess
+# import subprocess
 import webbrowser
 import os
 import time as time_module
 import locale
 import requests
 import openai
-import json
+# import json
 from dotenv import load_dotenv
 
 load_dotenv()
