@@ -9,7 +9,7 @@ virtualenv env
 
 despues de tener python
 source env/Scripts/activate # debe aparecerte en la consola entre parentesis env windows
-source myproject/bin/activate # linux
+source env/bin/activate # linux
 
 instalar un lector de variables de entorno
 pip install python-dotenv
