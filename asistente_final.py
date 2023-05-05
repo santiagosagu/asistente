@@ -20,7 +20,7 @@ asistente_activado = False
 microphone_always_on = False
 
 
-wit_client = os.getenv('wit.client')
+wit_client = os.getenv('WIT_API')
 
 client = wit.Wit(wit_client)
 
