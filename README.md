@@ -19,6 +19,7 @@ y pegar ahi las key de las variables de entorno siguientes:
 
 OPENIA=
 OPEN_WEATHER_MAP=
+WIT_API=
 
 instalar paquetes
 pip install -r requirements.txt
