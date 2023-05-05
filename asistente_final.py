@@ -12,12 +12,17 @@ from funciones.info_noticias import get_news
 import datetime
 import wit
 import pprint
+from dotenv import load_dotenv
+import os
 
 # Variable para detectar la palabra clave "asís"
 asistente_activado = False
 microphone_always_on = False
 
-client = wit.Wit("GCLGHUKLOEGK3F77CVU5GNKCSIHMAZ7Z")
+
+wit_client = os.getenv('wit.client')
+
+client = wit.Wit(wit_client)
 
 
 # Configuración de las librerías
