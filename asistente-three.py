@@ -1,20 +1,36 @@
 import speech_recognition as sr
 import pyttsx3
-import subprocess
 import webbrowser
 import os
 import time as time_module
 import locale
 import requests
 import openai
-import json
 from dotenv import load_dotenv
+from pywinauto import Application, Desktop, findwindows, controls, win32functions
+import pyautogui
+import webbrowser
+from pycaw.pycaw import AudioUtilities
+import win32api
+import win32con
+import win32gui
+
+
+def get_window_position(hwnd):
+    rect = win32gui.GetWindowRect(hwnd)
+    x = rect[0]
+    y = rect[1]
+    width = rect[2] - x
+    height = rect[3] - y
+    return (x, y, width, height)
+
 
 load_dotenv()
 
 # Configuración de las librerías
 engine = pyttsx3.init()
 r = sr.Recognizer()
+
 # Configuración del reconocedor de voz
 r.energy_threshold = 100  # Ajustar este valor según tu entorno
 r.dynamic_energy_threshold = True  # Habilitar ajuste dinámico del umbral de energía
@@ -34,19 +50,41 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
+
+def volumen_down():
+
+    sessions = AudioUtilities.GetAllSessions()
+    
+    for session in sessions:
+        volume = session.SimpleAudioVolume
+        if session.Process and session.Process.name() == "chrome.exe" and asistente_activado == True:
+            # print("\tProcess name:", session.Process.name())
+            # print("\tVolume:", volume.GetMasterVolume())
+            # print("\tMuted:", volume.GetMute())
+            volume.SetMasterVolume(0.1, None)
+            continue
+        else:
+            volume.SetMasterVolume(1.0, None)
+
+    # else:
+    #     print("No hay audio en reproducción.")
+
 # Función para reconocer el comando de voz
-def recognize_speech():
+def recognize_speech(max_duration=4):
 
     global microphone_always_on  # Definir la variable como global
 
     with sr.Microphone() as source:
         if asistente_activado:
+            volumen_down()
             print("Esperando...")
 
-            audio = r.listen(source)
+            audio = r.listen(source, phrase_time_limit= max_duration)
+
 
         else: 
             print("Llamame Asís y podre ayudarte... ")
+            volumen_down()
   
             audio = r.listen(source, phrase_time_limit=1.7) # Grabar hasta 2 segundos como máximo
 
@@ -164,17 +202,16 @@ model_engine = "text-davinci-003"
 def search_with_openIA():
     speak("¿Sobre qué tema quieres que investigue?")
     
-
     while True: 
 
-        topic = recognize_speech()  # Obtener el tema de investigacion
+        topic = recognize_speech(3)  # Obtener el tema de investigacion
 
         if topic == "salir":
             # speak('claro señor, dejare de consultar a chatGPT')
             break
 
         if topic == "déjame escribirte":
-            speak('ok señor se ha habilitado la entrada de texto')
+            speak('ok señor, se ha habilitado la entrada de texto')
             texto = input()
 
             completado = openai.Completion.create(
@@ -298,6 +335,149 @@ def pronostico():
          print("Error al realizar la solicitud a la API:", response.status_code)
 
 
+def escuchar_music():
+
+    # youtube_music_position = None
+
+    try:
+        youtube_music_window = findwindows.find_window(title_re=".*YouTube Music*.")
+
+        time_module.sleep(2)
+
+        youtube_music_app = Application().connect(handle=youtube_music_window)
+
+
+    except findwindows.WindowNotFoundError:
+        
+        # webbrowser.open("https://music.youtube.com/")
+        os.startfile("C:\\Users\\USER\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Aplicaciones de Chrome\\YouTube Music")
+        time_module.sleep(2)
+       
+        youtube_music_window = findwindows.find_window(title_re=".*YouTube Music*.")
+
+        time_module.sleep(1)
+
+        youtube_music_app = Application().connect(handle=youtube_music_window)
+
+
+    youtube_music_app_dialog = youtube_music_app.window(title_re=".*YouTube Music*.")
+    youtube_music_app_dialog.set_focus()
+    youtube_music_position = get_window_position(youtube_music_window)
+
+    screen = youtube_music_position[2]
+
+    print(screen)    
+
+    time_module.sleep(1)  # Esperar para asegurarse de que el control esté cargado
+
+    speak('Que accion quieres realizar')
+
+    comand = recognize_speech()
+
+    x = None
+    y = None
+    doble = False
+
+    pantalla_principal = 2576
+
+    # 2576
+
+    if comand == 'primera de vuelve a escucharlo':
+        # Haz clic el la primera eleccion de la lista 
+        x = 731 if screen == pantalla_principal else 429 # -302 diferencia
+        y = 509 if screen == pantalla_principal else 515 # +6 diferencia
+        
+
+    elif comand == 'segunda de vuelve a escucharlo':
+        x = 1156 if screen == pantalla_principal else 854
+        y = 514  if screen == pantalla_principal else 520
+
+    elif comand == 'volver al inicio':
+        x = 66
+        y = 132
+
+    elif comand == 'pausar canción' or comand == 'reproducir canción':
+        x = 78 if screen == pantalla_principal else 80
+        y = 1357 if screen == pantalla_principal else 1000
+
+    elif comand == 'siguiente canción':
+        x = 141 if screen == pantalla_principal else 143
+        y = 1352 if screen == pantalla_principal else 1000 
+
+    elif comand == 'anterior canción':
+        x = 30 if screen == pantalla_principal else 30
+        y = 1356 if screen == pantalla_principal else 1000
+        doble = True
+
+    elif comand == 'dar me gusta':
+        x = 1545 if screen == pantalla_principal else 1242
+        y = 1356 if screen == pantalla_principal else 1000
+
+    elif comand == 'pestaña 1':
+        x = 66 
+        y = 10
+
+    elif comand == 'obtener elemento' or comand == 'tener elemento':
+
+        # Obtener la posición actual del cursor del mouse
+        posicion_actual = pyautogui.position()
+
+        print("La posición actual del cursor del mouse es:", posicion_actual)
+        speak('ya obtuve la posición actual del cursor')
+
+    else:
+        speak('no pude entender lo que dices')
+
+
+    if x != None and y != None:
+        if doble == False:
+            youtube_music_app_dialog.click_input(coords=(x, y))
+        else:
+            youtube_music_app_dialog.double_click_input(coords=(x, y))
+
+
+# def movimiento_chrome():
+#     windows = findwindows.find_windows()
+
+#     app = Application(backend='uia')
+#     app.connect(title_re=".*- Google Chrome -*")
+#     windows = app.windows()
+#     for w in windows:
+#         print(w.texts())
+    
+#         w.set_focus()
+
+
+
+def movimiento_chrome():
+
+    windows = findwindows.find_windows()
+
+    app = Application(backend='uia')
+    app.connect(title_re=".* - Google Chrome -*", found_index=0)
+    windows = app.windows()
+    for w in windows:
+        print(w.texts())
+    
+        w.set_focus()
+
+        speak('a cual tab te quieres mover')
+
+        tab = recognize_speech()
+
+        if tab == 'uno':
+
+            w.click_input(coords=(60, 10))
+
+        elif tab == 'dos' or tab == "2":
+            
+            w.click_input(coords=(400, 10))
+        
+        break
+
+    # "C:\Users\USER\Desktop\YouTube Music.lnk"
+
+
 WAIT_TIME = 0.5 # segundos de espera entre solicitudes
 last_request_time = time_module.time() - WAIT_TIME # asegurarse de que la primera solicitud se hace de inmediato
 
@@ -336,6 +516,7 @@ while True:
             if "adiós" in speech_text:
                 asistente_activado = False
                 speak("¡Hasta pronto!")
+                volumen_down()
                 break
 
             elif "abrir" in speech_text:
@@ -385,6 +566,14 @@ while True:
 
             elif "dime el clima" in speech_text:
                 pronostico()
+                asistente_activado = False
+            
+            elif "control música" in speech_text:
+                escuchar_music()
+                asistente_activado = False
+
+            elif "moverme" in speech_text:
+                movimiento_chrome()
                 asistente_activado = False
 
             elif "dile a los muchachos" in speech_text:
