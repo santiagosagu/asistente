@@ -1,6 +1,8 @@
 # pocketsphinx
 SpeechRecognition
-pyaudio
+openai
 psutil
+pyaudio
+python-dotenv
 pyttsx3
 pycaw

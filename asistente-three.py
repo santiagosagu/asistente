@@ -1,11 +1,13 @@
 import speech_recognition as sr
 import pyttsx3
+# import subprocess
 import webbrowser
 import os
 import time as time_module
 import locale
 import requests
 import openai
+# import json
 from dotenv import load_dotenv
 from pywinauto import Application, Desktop, findwindows, controls, win32functions
 import pyautogui
@@ -33,7 +35,8 @@ r = sr.Recognizer()
 
 # Configuración del reconocedor de voz
 r.energy_threshold = 100  # Ajustar este valor según tu entorno
-r.dynamic_energy_threshold = True  # Habilitar ajuste dinámico del umbral de energía
+# Habilitar ajuste dinámico del umbral de energía
+r.dynamic_energy_threshold = True
 
 # Variable para detectar la palabra clave "asís"
 asistente_activado = False
@@ -46,6 +49,8 @@ locale.setlocale(locale.LC_ALL, 'es_ES')
 openai.api_key = os.getenv('OPENIA')
 
 # Función para hablar
+
+
 def speak(text):
     engine.say(text)
     engine.runAndWait()
@@ -54,7 +59,7 @@ def speak(text):
 def volumen_down():
 
     sessions = AudioUtilities.GetAllSessions()
-    
+
     for session in sessions:
         volume = session.SimpleAudioVolume
         if session.Process and session.Process.name() == "chrome.exe" and asistente_activado == True:
@@ -70,6 +75,8 @@ def volumen_down():
     #     print("No hay audio en reproducción.")
 
 # Función para reconocer el comando de voz
+
+
 def recognize_speech(max_duration=4):
 
     global microphone_always_on  # Definir la variable como global
@@ -79,50 +86,55 @@ def recognize_speech(max_duration=4):
             volumen_down()
             print("Esperando...")
 
-            audio = r.listen(source, phrase_time_limit= max_duration)
+            audio = r.listen(source, phrase_time_limit=max_duration)
 
-
-        else: 
+        else:
             print("Llamame Asís y podre ayudarte... ")
             volumen_down()
-  
-            audio = r.listen(source, phrase_time_limit=1.7) # Grabar hasta 2 segundos como máximo
 
+            # Grabar hasta 2 segundos como máximo
+            audio = r.listen(source, phrase_time_limit=1.7)
 
         try:
             speech_text = r.recognize_google(audio, language="es-ES")
             print(f"Has dicho: {speech_text}")
             return speech_text.lower()
-        
+
         except sr.UnknownValueError:
             # speak("Lo siento, no he entendido lo que has dicho. ¿Puedes repetirlo?")
             return None
-        
+
         except sr.RequestError as e:
-            print(f"No se pudo realizar la solicitud a Google Speech Recognition service; {e}")
+            print(
+                f"No se pudo realizar la solicitud a Google Speech Recognition service; {e}")
             return None
 
 # Función para abrir aplicaciones
+
+
 def open_application(application_name):
     if "chrome" in application_name:
         speak("Abriendo chrome")
         os.startfile("chrome.exe")
 
     elif "calculadora" in application_name:
-            speak("Abriendo la calculadora")
-            os.startfile("calc.exe")
+        speak("Abriendo la calculadora")
+        os.startfile("calc.exe")
 
     elif "notepad" in application_name:
-          os.startfile("notepad.exe")
-          speak("abriendo notepad")
+        os.startfile("notepad.exe")
+        speak("abriendo notepad")
 
     elif "visual" in application_name:
         speak('Abriendo visual')
-        os.startfile('C:\\Users\\USER\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe')
+        os.startfile(
+            'C:\\Users\\USER\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe')
     # else:
     #     speak("Lo siento, no puedo abrir esa aplicación.")
 
 # Función para cerrar aplicaciones
+
+
 def close_application(application_name):
     if "chrome" in application_name:
         speak("Cerrando chrome")
@@ -137,7 +149,8 @@ def close_application(application_name):
         speak("cerrando notepad")
 
     elif "visual" in application_name:
-        os.system("taskkill /f /im C:\\Users\\USER\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe")
+        os.system(
+            "taskkill /f /im C:\\Users\\USER\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe")
 
     # elif "excel" in application_name:
     #     subprocess.Popen(["C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE"])
@@ -152,12 +165,14 @@ def open_website(website_name):
 
     elif "en prime" in website_name:
         speak("Realizando búsqueda")
-        webbrowser.open("https://www.primevideo.com/search/ref=atv_nb_sug?ie=UTF8&phrase=" + website_name.replace("buscar en prime ", ""))
+        webbrowser.open("https://www.primevideo.com/search/ref=atv_nb_sug?ie=UTF8&phrase=" +
+                        website_name.replace("buscar en prime ", ""))
 
     elif "en youtube" in website_name:
         # webbrowser.open("https://www.youtube.com")
         speak("Realizando búsqueda")
-        webbrowser.open("https://www.youtube.com/results?search_query=" + website_name.replace("buscar en youtube ", ""))
+        webbrowser.open("https://www.youtube.com/results?search_query=" +
+                        website_name.replace("buscar en youtube ", ""))
 
     elif "youtube" in website_name:
         webbrowser.open("https://www.youtube.com")
@@ -169,7 +184,8 @@ def open_website(website_name):
         webbrowser.open("https://www.twitter.com")
 
     elif "en google" in website_name:
-        webbrowser.open("https://www.google.com/search?q=" + website_name.replace("buscar en google ", ""))   
+        webbrowser.open("https://www.google.com/search?q=" +
+                        website_name.replace("buscar en google ", ""))
 
     elif "maps" in website_name:
         webbrowser.open("https://www.google.com/maps")
@@ -182,7 +198,9 @@ def open_website(website_name):
     # else:
     #     speak("Lo siento, no puedo abrir ese sitio web.")
 
-#funcion para buscar las noticias
+# funcion para buscar las noticias
+
+
 def get_news():
     url = "https://newsapi.org/v2/top-headlines?country=co&apiKey=6a22b9fffa3b44ed9ba394da947101da"
     response = requests.get(url)
@@ -198,11 +216,13 @@ def get_news():
 model_engine = "text-davinci-003"
 # model_engine = "gpt-3.5-turbo"
 
-#Buscar con chat GPT
+# Buscar con chat GPT
+
+
 def search_with_openIA():
     speak("¿Sobre qué tema quieres que investigue?")
-    
-    while True: 
+
+    while True:
 
         topic = recognize_speech(3)  # Obtener el tema de investigacion
 
@@ -215,45 +235,42 @@ def search_with_openIA():
             texto = input()
 
             completado = openai.Completion.create(
-            engine=model_engine ,prompt=texto, max_tokens=2048, n=1,
-            stop=None,
-            logprobs=10
-            # timeout=None,
-            # presence_penalty=None,
-            # frequency_penalty=None,
-            # best_of=None,
+                engine=model_engine, prompt=texto, max_tokens=2048, n=1,
+                stop=None,
+                logprobs=10
+                # timeout=None,
+                # presence_penalty=None,
+                # frequency_penalty=None,
+                # best_of=None,
             )
 
             respuesta = completado.choices[0].text
 
             speak(respuesta)
             print(respuesta)
-
-
 
             # break
 
         else:
 
             completado = openai.Completion.create(
-            engine=model_engine ,prompt=topic, max_tokens=2048, n=1,
-            stop=None,
-            logprobs=10
-            # timeout=None,
-            # presence_penalty=None,
-            # frequency_penalty=None,
-            # best_of=None,
+                engine=model_engine, prompt=topic, max_tokens=2048, n=1,
+                stop=None,
+                logprobs=10
+                # timeout=None,
+                # presence_penalty=None,
+                # frequency_penalty=None,
+                # best_of=None,
             )
-            
+
             respuesta = completado.choices[0].text
             speak(respuesta)
             print(respuesta)
 
-
             # break
 
-        
-#usar segunda opcion
+
+# usar segunda opcion
 # Enviar la solicitud inicial al modelo
 def segunda_opcion():
 
@@ -261,11 +278,11 @@ def segunda_opcion():
 
     topic = recognize_speech()
 
-    while True: 
+    while True:
         if topic == "salir":
             # speak('claro señor, dejare de consultar a chatGPT')
             break
-    
+
         # Define la URL de la solicitud y los parámetros
         url = "https://api.openai.com/v1/engines/text-davinci-003/completions"
         headers = {
@@ -290,10 +307,12 @@ def segunda_opcion():
         for chunk in response.iter_content(chunk_size=None):
             if chunk:
                 print(chunk.decode())
-        
+
         break
 
-#investigar en google
+# investigar en google
+
+
 def search_google():
 
     speak("cual es tu consulta en google")
@@ -301,8 +320,10 @@ def search_google():
     query = recognize_speech()
     webbrowser.open("https://www.google.com/search?q=" + query)
 
-#buscar el clima
+
+# buscar el clima
 api_clima = os.getenv('OPEN_WEATHER_MAP')
+
 
 def pronostico():
 
@@ -310,16 +331,19 @@ def pronostico():
 
     ciudad = recognize_speech()
 
-    url = 'https://api.openweathermap.org/data/2.5/weather?q=' + ciudad + ',CO&appid=' + api_clima
+    url = 'https://api.openweathermap.org/data/2.5/weather?q=' + \
+        ciudad + ',CO&appid=' + api_clima
     response = requests.get(url)
 
     if response.status_code == 200:
 
         data = response.json()
 
-        temperature = "Temperatura" + ciudad, data["main"]["temp"], "grados Celsius"
+        temperature = "Temperatura" + \
+            ciudad, data["main"]["temp"], "grados Celsius"
         humedad = "Humedad en" + ciudad, data["main"]["humidity"], "%"
-        description = "Descripción del clima en " + ciudad, data["weather"][0]["description"]
+        description = "Descripción del clima en " + \
+            ciudad, data["weather"][0]["description"]
 
         speak(temperature)
         print(temperature)
@@ -329,10 +353,10 @@ def pronostico():
 
         speak(description)
         print(description)
-    
+
     else:
-         speak('actualmente no puedo obtener la respuesta me disculpo')
-         print("Error al realizar la solicitud a la API:", response.status_code)
+        speak('actualmente no puedo obtener la respuesta me disculpo')
+        print("Error al realizar la solicitud a la API:", response.status_code)
 
 
 def escuchar_music():
@@ -340,35 +364,38 @@ def escuchar_music():
     # youtube_music_position = None
 
     try:
-        youtube_music_window = findwindows.find_window(title_re=".*YouTube Music*.")
+        youtube_music_window = findwindows.find_window(
+            title_re=".*YouTube Music*.")
 
         time_module.sleep(2)
 
         youtube_music_app = Application().connect(handle=youtube_music_window)
 
-
     except findwindows.WindowNotFoundError:
-        
+
         # webbrowser.open("https://music.youtube.com/")
-        os.startfile("C:\\Users\\USER\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Aplicaciones de Chrome\\YouTube Music")
+        os.startfile(
+            "C:\\Users\\USER\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Aplicaciones de Chrome\\YouTube Music")
         time_module.sleep(2)
-       
-        youtube_music_window = findwindows.find_window(title_re=".*YouTube Music*.")
+
+        youtube_music_window = findwindows.find_window(
+            title_re=".*YouTube Music*.")
 
         time_module.sleep(1)
 
         youtube_music_app = Application().connect(handle=youtube_music_window)
 
-
-    youtube_music_app_dialog = youtube_music_app.window(title_re=".*YouTube Music*.")
+    youtube_music_app_dialog = youtube_music_app.window(
+        title_re=".*YouTube Music*.")
     youtube_music_app_dialog.set_focus()
     youtube_music_position = get_window_position(youtube_music_window)
 
     screen = youtube_music_position[2]
 
-    print(screen)    
+    print(screen)
 
-    time_module.sleep(1)  # Esperar para asegurarse de que el control esté cargado
+    # Esperar para asegurarse de que el control esté cargado
+    time_module.sleep(1)
 
     speak('Que accion quieres realizar')
 
@@ -383,14 +410,13 @@ def escuchar_music():
     # 2576
 
     if comand == 'primera de vuelve a escucharlo':
-        # Haz clic el la primera eleccion de la lista 
-        x = 731 if screen == pantalla_principal else 429 # -302 diferencia
-        y = 509 if screen == pantalla_principal else 515 # +6 diferencia
-        
+        # Haz clic el la primera eleccion de la lista
+        x = 731 if screen == pantalla_principal else 429  # -302 diferencia
+        y = 509 if screen == pantalla_principal else 515  # +6 diferencia
 
     elif comand == 'segunda de vuelve a escucharlo':
         x = 1156 if screen == pantalla_principal else 854
-        y = 514  if screen == pantalla_principal else 520
+        y = 514 if screen == pantalla_principal else 520
 
     elif comand == 'volver al inicio':
         x = 66
@@ -402,7 +428,7 @@ def escuchar_music():
 
     elif comand == 'siguiente canción':
         x = 141 if screen == pantalla_principal else 143
-        y = 1352 if screen == pantalla_principal else 1000 
+        y = 1352 if screen == pantalla_principal else 1000
 
     elif comand == 'anterior canción':
         x = 30 if screen == pantalla_principal else 30
@@ -414,7 +440,7 @@ def escuchar_music():
         y = 1356 if screen == pantalla_principal else 1000
 
     elif comand == 'pestaña 1':
-        x = 66 
+        x = 66
         y = 10
 
     elif comand == 'obtener elemento' or comand == 'tener elemento':
@@ -427,7 +453,6 @@ def escuchar_music():
 
     else:
         speak('no pude entender lo que dices')
-
 
     if x != None and y != None:
         if doble == False:
@@ -444,9 +469,8 @@ def escuchar_music():
 #     windows = app.windows()
 #     for w in windows:
 #         print(w.texts())
-    
-#         w.set_focus()
 
+#         w.set_focus()
 
 
 def movimiento_chrome():
@@ -458,7 +482,7 @@ def movimiento_chrome():
     windows = app.windows()
     for w in windows:
         print(w.texts())
-    
+
         w.set_focus()
 
         speak('a cual tab te quieres mover')
@@ -470,16 +494,18 @@ def movimiento_chrome():
             w.click_input(coords=(60, 10))
 
         elif tab == 'dos' or tab == "2":
-            
+
             w.click_input(coords=(400, 10))
-        
+
         break
 
     # "C:\Users\USER\Desktop\YouTube Music.lnk"
 
 
-WAIT_TIME = 0.5 # segundos de espera entre solicitudes
-last_request_time = time_module.time() - WAIT_TIME # asegurarse de que la primera solicitud se hace de inmediato
+WAIT_TIME = 0.5  # segundos de espera entre solicitudes
+# asegurarse de que la primera solicitud se hace de inmediato
+last_request_time = time_module.time() - WAIT_TIME
+
 
 def activate_asistente():
     global asistente_activado
@@ -487,10 +513,13 @@ def activate_asistente():
     speak("¿En qué puedo ayudarte?")
 
 # Función para desactivar el asistente
+
+
 def deactivate_asistente():
     global asistente_activado
     asistente_activado = False
     speak("Hasta pronto")
+
 
 while True:
 
@@ -498,7 +527,7 @@ while True:
     elapsed_time = current_time - last_request_time
 
     if elapsed_time > WAIT_TIME:
-         last_request_time = current_time
+        last_request_time = current_time
 
     if not asistente_activado:
         speech_text = recognize_speech()
@@ -553,7 +582,7 @@ while True:
                 news = get_news()
                 speak("Aquí están las últimas noticias. " + news)
                 asistente_activado = False
-            
+
             elif "investiga" in speech_text:
                 search_with_openIA()
                 # segunda_opcion()
@@ -563,11 +592,10 @@ while True:
                 search_google()
                 asistente_activado = False
 
-
             elif "dime el clima" in speech_text:
                 pronostico()
                 asistente_activado = False
-            
+
             elif "control música" in speech_text:
                 escuchar_music()
                 asistente_activado = False
@@ -577,7 +605,8 @@ while True:
                 asistente_activado = False
 
             elif "dile a los muchachos" in speech_text:
-                speak("señores mi creador esta ocupado programandome, en un momento estara disponible para jugar...")
+                speak(
+                    "señores mi creador esta ocupado programandome, en un momento estara disponible para jugar...")
 
             else:
                 speak("Lo siento, no he entendido lo que has dicho")
@@ -585,7 +614,3 @@ while True:
 
         else:
             continue
-
-        
-
-    
