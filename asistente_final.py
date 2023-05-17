@@ -85,7 +85,7 @@ while True:
 
     # get_news_mundo()
     # get_news_espn_fox()
-    get_news_video_juegos()
+    # get_news_video_juegos()
     # get_news_tecnologia()
 
     user = verification_user(recognize_speech)
