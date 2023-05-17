@@ -1,23 +1,14 @@
-
-from pywinauto import Application, Desktop, findwindows, controls, win32functions
 import time as time_module
 import os
-import win32gui
-import pyautogui
+from pywinauto import Application, Desktop, findwindows, controls, win32functions
+
+from funciones.subFuncionesMusica.reproduccion_aleatoria_me_gusta import reproduccion_aleatoria_me_gusta
+from funciones.subFuncionesMusica.iniciar_radio import iniciar_radio
+from funciones.subFuncionesMusica.interaccion_musica import pausar_reproducir_cancion, siguiente_canción, anterior_canción, repetir_canción
+from funciones.utils import get_window_position, get_window_position_relative
 
 
-def get_window_position(hwnd):
-    rect = win32gui.GetWindowRect(hwnd)
-    x = rect[0]
-    y = rect[1]
-    width = rect[2] - x
-    height = rect[3] - y
-    return (x, y, width, height)
-
-
-def control_music(recognize_speech, speak):
-
-    # youtube_music_position = None
+def control_music(recognize_speech, speak, speech_text):
 
     try:
         youtube_music_window = findwindows.find_window(
@@ -35,7 +26,7 @@ def control_music(recognize_speech, speak):
         time_module.sleep(2)
 
         youtube_music_window = findwindows.find_window(
-            title_re=".*YouTube Music*.")
+            title_re=".*YouTube Music*")
 
         time_module.sleep(1)
 
@@ -45,215 +36,70 @@ def control_music(recognize_speech, speak):
         title_re=".*YouTube Music*.")
     youtube_music_app_dialog.set_focus()
 
-    speak('Que accion quieres realizar')
+    x = None
+    y = None
 
-    while True:
+    pantalla_principal = 2576
+    width_ventana_in_pantalla_principal = 1265
 
-        youtube_music_position = get_window_position(youtube_music_window)
+    segunda_pantalla = 1936
+    width_ventana_segunda_pantalla = 1265
 
-        screen = youtube_music_position[2]
-        left = youtube_music_position[0]
-        top = youtube_music_position[1]
+    youtube_music_position = get_window_position(youtube_music_window)
+    time_module.sleep(1)
+    screen = youtube_music_position[2]
+    left = youtube_music_position[0]
+    top = youtube_music_position[1]
 
-        print(screen)
+    print(screen)
 
-        # Esperar para asegurarse de que el control esté cargado
-        time_module.sleep(1)
+    if "pon música" in speech_text or "pon la música" in speech_text or "pon los temas" in speech_text or "quiero" in speech_text:
+        speak('vale. pondre la lista de me gusta.')
+        reproduccion_aleatoria_me_gusta(x, y, screen, pantalla_principal, width_ventana_in_pantalla_principal,
+                                        segunda_pantalla, width_ventana_segunda_pantalla, youtube_music_app_dialog)
 
-        comand = recognize_speech(8)
+        return None
 
-        x = None
-        y = None
-        doble = False
+    elif "pausar" in speech_text or "reproducir" in speech_text:
+        pausar_reproducir_cancion(x, y, screen, pantalla_principal, width_ventana_in_pantalla_principal,
+                                  segunda_pantalla, width_ventana_segunda_pantalla, youtube_music_app_dialog)
 
-        pantalla_principal = 2576
-        width_ventana_in_pantalla_principal = 1265
+        return None
 
-        segunda_pantalla = 1936
-        width_ventana_segunda_pantalla = 1265
+    elif "siguiente" in speech_text:
+        siguiente_canción(x, y, screen, pantalla_principal, width_ventana_in_pantalla_principal,
+                           segunda_pantalla, width_ventana_segunda_pantalla, youtube_music_app_dialog)
 
-        if comand == 'vuelve a escucharlo':
+        return None
 
-            if screen == pantalla_principal:
-                x = 730
-                y = 434
+    elif "anterior" in speech_text:
+        anterior_canción(x, y, screen, pantalla_principal, width_ventana_in_pantalla_principal,
+                          segunda_pantalla, width_ventana_segunda_pantalla, youtube_music_app_dialog)
 
-            elif screen == width_ventana_in_pantalla_principal:
+        return None
 
-                x = 279
-                y = 390
+    elif "repetir" in speech_text:
+        repetir_canción(x, y, screen, pantalla_principal, width_ventana_in_pantalla_principal,
+                         segunda_pantalla, width_ventana_segunda_pantalla, youtube_music_app_dialog)
 
-            elif screen == segunda_pantalla:
-                x = 410
-                y = 439
+        return None
 
-            elif screen == width_ventana_segunda_pantalla:
-                x = 270
-                y = 392
+    elif "radio" in speech_text:
+        iniciar_radio(x, y, screen, pantalla_principal, width_ventana_in_pantalla_principal,
+                      segunda_pantalla, width_ventana_segunda_pantalla, youtube_music_app_dialog)
 
-            youtube_music_app_dialog.click_input(coords=(x, y))
+        return None
 
-            break
+    elif "control" in speech_text:
+        speak("quieres obtener la posicion del elemento")
 
-        elif comand == 'volver al inicio':
+        confirmacion = recognize_speech()
 
-            if screen == pantalla_principal:
-                x = 60
-                y = 63
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 68
-                y = 63
-            elif screen == segunda_pantalla:
-                x = 76
-                y = 66
-            elif screen == width_ventana_segunda_pantalla:
-                x = 78
-                y = 64
+        print(confirmacion)
 
-            youtube_music_app_dialog.click_input(coords=(x, y))
+        if 'sí' in confirmacion:
+            get_window_position_relative(left, top)
 
-            break
-
-        elif comand == 'pausar canción' or comand == 'reproducir canción':
-            if screen == pantalla_principal:
-                x = 91
-                y = 1358
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 93
-                y = 995
-            elif screen == segunda_pantalla:
-                x = 90
-                y = 1003
-            elif screen == width_ventana_segunda_pantalla:
-                x = 93
-                y = 990
-
-            youtube_music_app_dialog.click_input(coords=(x, y))
-
-            break
-
-        elif comand == 'siguiente canción' or comand == 'canción siguiente':
-            if screen == pantalla_principal:
-                x = 146
-                y = 1365
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 149
-                y = 992
-            elif screen == segunda_pantalla:
-                x = 145
-                y = 1004
-            elif screen == width_ventana_segunda_pantalla:
-                x = 146
-                y = 994
-
-            youtube_music_app_dialog.click_input(coords=(x, y))
-
-            break
-
-        elif comand == 'anterior canción' or comand == 'canción anterior':
-            if screen == pantalla_principal:
-                x = 34
-                y = 1366
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 36
-                y = 994
-            elif screen == segunda_pantalla:
-                x = 32
-                y = 1004
-            elif screen == width_ventana_segunda_pantalla:
-                x = 34
-                y = 992
-
-            doble = True
-            youtube_music_app_dialog.double_click_input(coords=(x, y))
-
-            break
-
-        elif comand == 'repetir canción':
-            if screen == pantalla_principal:
-                x = 34
-                y = 1366
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 36
-                y = 994
-            elif screen == segunda_pantalla:
-                x = 32
-                y = 1004
-            elif screen == width_ventana_segunda_pantalla:
-                x = 34
-                y = 992
-
-            youtube_music_app_dialog.click_input(coords=(x, y))
-
-            break
-
-        elif comand == 'dar me gusta':
-            if screen == pantalla_principal:
-                x = 1504
-                y = 1362
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 823
-                y = 998
-            elif screen == segunda_pantalla:
-                x = 1185
-                y = 1004
-            elif screen == width_ventana_segunda_pantalla:
-                x = 825
-                y = 997
-
-            youtube_music_app_dialog.click_input(coords=(x, y))
-
-            break
-
-        elif comand == 'iniciar radio':
-            if screen == pantalla_principal:
-                x = 1558
-                y = 1365
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 823
-                y = 998
-            elif screen == segunda_pantalla:
-                x = 1185
-                y = 1004
-            elif screen == width_ventana_segunda_pantalla:
-                x = 825
-                y = 997
-
-            youtube_music_app_dialog.click_input(coords=(x, y))
-
-            if screen == pantalla_principal:
-                x = 1636
-                y = 868
-            elif screen == width_ventana_in_pantalla_principal:
-                x = 823
-                y = 998
-            elif screen == segunda_pantalla:
-                x = 1185
-                y = 1004
-            elif screen == width_ventana_segunda_pantalla:
-                x = 825
-                y = 997
-
-            youtube_music_app_dialog.click_input(coords=(x, y))
-
-            break
-
-        elif comand == 'baja':
-            youtube_music_app_dialog.click_input(coords=(76, 310))
-            pyautogui.scroll(-560)
-
-        elif comand == 'obtener elemento' or comand == 'tener elemento':
-
-            # Calculamos la posición en la pantalla relativa a la ventana
-            pos_x, pos_y = pyautogui.position()
-            pos_x -= left
-            pos_y -= top
-
-            # Imprimimos la posición en la pantalla
-            print(f"Posición en pantalla: ({pos_x}, {pos_y})")
-            speak('ya obtuve la posición actual del cursor')
-
-            break
-
-        else:
-            speak('no pude entender lo que dices')
+    else:
+        speak('no puede interpretar que querias hacer')
+        return None

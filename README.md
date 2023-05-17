@@ -26,6 +26,10 @@ pip install -r requirements.txt
 
 asegurarse que todos los paquetes esten instalos en el archivo asistente-three.py
 
+para usar la funcionalidad de reconocer texto en base a lo que hay en la pantalla necesario instalar por aparte Tesseract-OCR y ademas descargar el idioma español y pegarlo en la ruta C:\Program Files\Tesseract-OCR\tessdata
+
+url https://github.com/tesseract-ocr/tessdata_best/blob/main/spa.traineddata
+
 correr el programa
 python asistente-three.py
 

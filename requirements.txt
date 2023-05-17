@@ -6,3 +6,7 @@ pyaudio
 python-dotenv
 pyttsx3
 pycaw
+python-firebase
+selenium
+translate
+mtranslate

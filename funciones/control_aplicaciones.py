@@ -1,8 +1,11 @@
 import os
+
 from funciones.abrir_paginas import open_website
+from funciones.verificacion_app_video import verificacion_app_video
+from funciones.utils import speak
 
 
-def open_application(application_name, speak):
+def open_application(application_name, recognize_speech):
 
     # abrir programa
     if "chrome" in application_name:
@@ -24,8 +27,11 @@ def open_application(application_name, speak):
     # else:
     #     speak("Lo siento, no puedo abrir esa aplicación.")
 
+    elif "youtube" in application_name or "prime" in application_name or 'star' in application_name or 'hbo' in application_name:
+        verificacion_app_video(application_name, recognize_speech)
+
     # abrir pagina
-    elif "en prime" in application_name or "en youtube" in application_name or "youtube" in application_name or "facebook" in application_name or "en google" in application_name or "maps" in application_name or "chat" in application_name:
+    elif "facebook" in application_name or "en google" in application_name or "maps" in application_name or "chat" in application_name:
         open_website(application_name, speak)
 
 

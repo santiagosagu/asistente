@@ -1,7 +1,10 @@
-import time as time_module
-from pycaw.pycaw import AudioUtilities
-import pyttsx3
 import speech_recognition as sr
+import os
+import pprint
+import time as time_module
+import wit
+from dotenv import load_dotenv
+
 from funciones.abrir_paginas import open_website
 from funciones.clima import pronostico
 from funciones.conection_chatGPT import search_with_openIA
@@ -9,24 +12,24 @@ from funciones.control_aplicaciones import open_application, close_application
 from funciones.control_musica import control_music
 from funciones.info_cotidiana import hora_local, fecha_local, recordatorios, agregar_recordatorio, programar_recordatorios, listar_recordatorios, prueba_escuchar_musica
 from funciones.info_noticias import get_news
-import datetime
-import wit
-import pprint
-from dotenv import load_dotenv
-import os
+from funciones.verificacion_app_video import verificacion_app_video
+from funciones.utils import speak, volumen_down, verification_user
+from firebaseClient.enpoints_recordatorios import crear_registro_recordatorio
+from funciones.scraping_mercado_libre import scraping_mercado_libre
+from funciones.subFuncionesNoticias.noticias_del_mundo import get_news_mundo, get_news_espn_fox, get_news_video_juegos, get_news_tecnologia
 
 # Variable para detectar la palabra clave "asís"
 asistente_activado = False
-microphone_always_on = False
 
 
-wit_client = os.getenv('wit.client')
+load_dotenv()
+
+wit_client = os.getenv('WIT_API')
 
 client = wit.Wit(wit_client)
 
 
 # Configuración de las librerías
-engine = pyttsx3.init()
 r = sr.Recognizer()
 
 # Configuración del reconocedor de voz
@@ -35,45 +38,18 @@ r.energy_threshold = 100  # Ajustar este valor según tu entorno
 r.dynamic_energy_threshold = True
 
 
-# Función para hablar
-def speak(text):
-    engine.say(text)
-    engine.runAndWait()
-
-
-def volumen_down():
-
-    sessions = AudioUtilities.GetAllSessions()
-
-    for session in sessions:
-        volume = session.SimpleAudioVolume
-        if session.Process and session.Process.name() == "chrome.exe" and asistente_activado == True:
-            # print("\tProcess name:", session.Process.name())
-            # print("\tVolume:", volume.GetMasterVolume())
-            # print("\tMuted:", volume.GetMute())
-            volume.SetMasterVolume(0.1, None)
-            continue
-        else:
-            volume.SetMasterVolume(1.0, None)
-
-    # else:
-    #     print("No hay audio en reproducción.")
-
-
 def recognize_speech(max_duration=3):
-
-    global microphone_always_on  # Definir la variable como global
 
     with sr.Microphone() as source:
         if asistente_activado:
-            volumen_down()
+            volumen_down(asistente_activado)
             print("Esperando...")
 
             audio = r.listen(source, phrase_time_limit=max_duration)
 
         else:
             print("Llamame Asís y podre ayudarte... ")
-            volumen_down()
+            volumen_down(asistente_activado)
 
             # Grabar hasta 2 segundos como máximo
             audio = r.listen(source, phrase_time_limit=1.5)
@@ -93,17 +69,10 @@ def recognize_speech(max_duration=3):
             return None
 
 
-WAIT_TIME = 0.5  # segundos de espera entre solicitudes
-# asegurarse de que la primera solicitud se hace de inmediato
-last_request_time = time_module.time() - WAIT_TIME
-
-
 def activate_asistente():
     global asistente_activado
     asistente_activado = True
     speak("¿En qué puedo ayudarte?")
-
-# Función para desactivar el asistente
 
 
 def deactivate_asistente():
@@ -114,21 +83,24 @@ def deactivate_asistente():
 
 while True:
 
-    programar_recordatorios(speak)
+    # get_news_mundo()
+    # get_news_espn_fox()
+    get_news_video_juegos()
+    # get_news_tecnologia()
 
-    current_time = time_module.time()
-    elapsed_time = current_time - last_request_time
+    user = verification_user(recognize_speech)
 
-    if elapsed_time > WAIT_TIME:
-        last_request_time = current_time
+    if user[0] is not None:
+        programar_recordatorios(speak)
 
     if not asistente_activado:
         speech_text = recognize_speech()
 
         if speech_text:
-            if "asís" in speech_text:
+            if "asís" in speech_text or "así" in speech_text:
                 asistente_activado = True
-                speak("¡Hola! ¿En qué puedo ayudarte?")
+                speak(
+                    f"¡Hola {user[0].split('-')[0]}!  ¿En qué puedo ayudarte?")
                 continue
             else:
                 continue
@@ -147,14 +119,30 @@ while True:
             if "adiós" in speech_text:
                 asistente_activado = False
                 speak("¡Hasta pronto!")
-                volumen_down()
+                volumen_down(asistente_activado)
                 break
 
-            elif len(entidades) > 1:
-                # el diccionario tiene más de una clave
-                speak(
-                    'He optenido varias opciones te recomiendo que la añadas a mi modelo o intenta decirlo de otra forma')
-                continue
+            # elif len(entidades) > 1:
+            #     # el diccionario tiene más de una clave
+            #     speak(
+            #         'He optenido varias opciones te recomiendo que la añadas a mi modelo o intenta decirlo de otra forma')
+            #     continue
+
+            elif "buscar_ofertas:buscar_ofertas" in entidades:
+                comand = entidades['buscar_ofertas:buscar_ofertas'][0]['value']
+
+                product = None
+
+                if "busqueda_ofertas:busqueda_ofertas" in entidades:
+                    product = entidades['busqueda_ofertas:busqueda_ofertas'][0]['value']
+
+                print(comand)
+                print(product)
+
+                # volumen_down(False)
+
+                scraping_mercado_libre(product, recognize_speech)
+                asistente_activado = False
 
             elif "investiga" in speech_text:
                 search_with_openIA(recognize_speech, speak)
@@ -166,11 +154,12 @@ while True:
 
             elif "wit$reminder:reminder" in entidades:
                 recordatorio = agregar_recordatorio(recognize_speech, speak)
-                recordatorios.append(recordatorio)
+                crear_registro_recordatorio(recordatorio)
+                # recordatorios.append(recordatorio)
                 asistente_activado = False
 
             elif "abrir_programa:abrir_programa" in entidades:
-                open_application(speech_text, speak)
+                open_application(speech_text, recognize_speech)
                 asistente_activado = False
 
             elif "cerrar_programa:cerrar_programa" in entidades:
@@ -196,9 +185,13 @@ while True:
                 asistente_activado = False
 
             elif "escuchar_musica:escuchar_musica" in entidades:
-                speak('encontre el comando para musica')
 
-                control_music(recognize_speech, speak)
+                control_music(recognize_speech, speak, speech_text)
+                asistente_activado = False
+
+            elif "control_video:control_video" in entidades:
+                verificacion_app_video(speech_text, recognize_speech)
+
                 asistente_activado = False
 
             # elif "abrir" in speech_text:
@@ -260,6 +253,13 @@ while True:
             # elif "qué tengo pendiente" in speech_text:
             #     listar_recordatorios(speak)
             #     asistente_activado = False
+
+            elif "prueba mercado" in speech_text:
+                asistente_activado = False
+
+                volumen_down(False)
+
+                scraping_mercado_libre(speech_text)
 
             elif "prueba música" in speech_text:
                 prueba_escuchar_musica(recognize_speech, speak)

@@ -4,10 +4,10 @@ import time as time_module
 from playsound import playsound
 import datetime
 import pygame
-import dateparser
 import wit
 from dotenv import load_dotenv
 import os
+from firebaseClient.enpoints_recordatorios import traer_registros_recordatorio, eliminar_registro_recordatorio
 
 load_dotenv()
 
@@ -37,7 +37,7 @@ pygame.init()
 
 pausado = True
 
-recordatorios = []
+recordatorios = traer_registros_recordatorio()
 
 
 def agregar_recordatorio(recognize_speech, speak):
@@ -63,7 +63,7 @@ def agregar_recordatorio(recognize_speech, speak):
             fecha_hora = entidades["wit$datetime:datetime"][0]["value"]
             fecha = datetime.datetime.strptime(
                 fecha_hora, "%Y-%m-%dT%H:%M:%S.%f%z")
-            recordatorio = (mensaje, fecha)
+            recordatorio = {'mensaje': mensaje, 'fecha': fecha}
             print(recordatorio)
 
             speak('listo, se ha creado el recordatorio')
@@ -74,7 +74,7 @@ def agregar_recordatorio(recognize_speech, speak):
             fecha_hora = entidades["wit$datetime:datetime"][0]["values"][0]['to']['value']
             fecha = datetime.datetime.strptime(
                 fecha_hora, "%Y-%m-%dT%H:%M:%S.%f%z")
-            recordatorio = (mensaje, fecha)
+            recordatorio = {'mensaje': mensaje, 'fecha': fecha}
             print(recordatorio)
 
             speak('listo se ha creado el recordatorio')
@@ -98,47 +98,75 @@ def programar_recordatorios(speak):
         'D:\\estudio\\asistente-con-python\\ringtone\\la-atmosfera_4.mp3')
 
     while True:
-        ahora = datetime.datetime.now()
-        for i, (mensaje, hora_recordatorio) in enumerate(recordatorios):
 
-            # ahora_con_timezone = ahora.astimezone(datetime.timedelta(days=-1, seconds=68400))
-            ahora_con_timezone = ahora.astimezone(
-                datetime.timezone(datetime.timedelta(days=-1, seconds=68400)))
+        recordatorios = traer_registros_recordatorio()
 
-            if ahora_con_timezone >= hora_recordatorio:
-                print("Recordatorio:", mensaje)
-                pausado = False
+        if recordatorios is not None:
+            ahora = datetime.datetime.now()
+            for clave, registro in recordatorios:
+                ahora_con_timezone = ahora.astimezone(
+                    datetime.timezone(datetime.timedelta(days=-1, seconds=68400)))
 
-                speak('se ha cumplido el tiempo del recordatorio:' + mensaje)
-                pygame.mixer.music.play()
-                speak('se ha cumplido el tiempo del recordatorio:' + mensaje)
-                del recordatorios[i]
+                firebase_fecha = datetime.datetime.fromisoformat(
+                    registro['fecha'])
 
-                time_module.sleep(1)
-                break
+                diferencia = ahora_con_timezone - firebase_fecha
+                tiempo_maximo = datetime.timedelta(minutes=10)
 
-                # Espera hasta que termine de reproducirse la canción
-                # while pygame.mixer.music.get_busy():
-                #     if pausado:
-                #         pygame.mixer.music.pause()
-                #     else:
-                #         pygame.mixer.music.unpause()
+                if diferencia > tiempo_maximo:
+                    print(
+                        'hace mas de 10 minutos se cumplio este recordatorio para que lo tengas encuenta')
+                    eliminar_registro_recordatorio(clave)
+
+                elif ahora_con_timezone >= firebase_fecha:
+                    print("Recordatorio:", registro['mensaje'])
+                    pausado = False
+
+                    speak('se ha cumplido el tiempo del recordatorio:' +
+                          registro['mensaje'])
+                    pygame.mixer.music.play()
+                    speak('se ha cumplido el tiempo del recordatorio:' +
+                          registro['mensaje'])
+
+                    print(clave)
+                    eliminar_registro_recordatorio(clave)
+                    time_module.sleep(1)
+                    break
+
+            #         # Espera hasta que termine de reproducirse la canción
+            #         # while pygame.mixer.music.get_busy():
+            #         #     if pausado:
+            #         #         pygame.mixer.music.pause()
+            #         #     else:
+            #         #         pygame.mixer.music.unpause()
 
         break
 
 
 def listar_recordatorios(speak):
 
-    speak('estos son los siguientes recordatorios pendientes')
+    recordatorios = traer_registros_recordatorio()
 
-    for recordatorio in recordatorios:
-        año = recordatorio[1].year
-        mes = recordatorio[1].month
-        dia = recordatorio[1].day
-        hora = recordatorio[1].hour
-        minutos = recordatorio[1].minute
+    if recordatorios is not None:
 
-        speak(f'{recordatorio[0]}, año: {año}, mes: {mes}, dia: {dia}, hora: {hora}:{minutos}')
+        speak('estos son los siguientes recordatorios pendientes')
+
+        for clave, recordatorio in recordatorios:
+
+            firebase_fecha = datetime.datetime.fromisoformat(
+                recordatorio['fecha'])
+
+            año = firebase_fecha.year
+            mes = firebase_fecha.month
+            dia = firebase_fecha.day
+            hora = firebase_fecha.hour
+            minutos = firebase_fecha.minute
+            mensaje = recordatorio['mensaje']
+
+            speak(f'{mensaje} , año: {año}, mes: {mes}, dia: {dia}, hora: {hora}:{minutos}')
+
+    else:
+        speak('No tienes recordatorios pendientes...')
 
 
 def prueba_escuchar_musica(recognize_speech, speak):
